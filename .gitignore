@@ -1,0 +1,22 @@
+# dependencies
+/node_modules
+/node_modules.incomplete-install
+
+# Next.js build output
+/.next
+/out
+
+# local environment files
+.env*
+!.env.example
+
+# tooling
+*.tsbuildinfo
+.DS_Store
+/.codex-temp/
+
+# local project sources used only for portfolio references
+/coffee_tuman_php/
+/Kasatset/
+/sistem-kasir/
+/web legalkes/
