@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Navbar } from "@/components/navbar";
 import { ArrowUpRight } from "@/components/icons";
 import { ProjectCard } from "@/components/project-card";
@@ -30,14 +30,49 @@ const indonesianProjects: Project[] = [
   { title: "Landing Page Legalkes", category: "Landing Page & Desain Web", description: "Landing page responsif untuk layanan konsultasi perizinan alat kesehatan, dengan informasi layanan, konten kredibilitas, carousel logo klien, galeri portofolio interaktif, dan CTA konsultasi langsung.", technologies: ["HTML", "CSS", "JavaScript"], status: "Selesai", image: "/projects/legalkes-landing.png", imageAlt: "Hero landing page Legalkes untuk konsultasi perizinan alat kesehatan", imageLoading: "eager", imageUnoptimized: true },
 ];
 
+function HeroName() {
+  const lines = ["Dipca", "Anugrah."];
+  return (
+    <h1 className="display hero-name text-[clamp(3.7rem,9.5vw,8.4rem)] leading-[.83]" aria-label="Dipca Anugrah">
+      {lines.map((line, lineIndex) => (
+        <span key={line} className={`hero-name-line ${lineIndex === 1 ? "text-[#d7ff75]" : ""}`}>
+          {Array.from(line).map((character, characterIndex) => (
+            <span
+              key={`${character}-${characterIndex}`}
+              className="hero-character"
+              style={{ "--character-delay": `${220 + (lineIndex * line.length + characterIndex) * 42}ms` } as CSSProperties}
+            >
+              {character}
+            </span>
+          ))}
+        </span>
+      ))}
+    </h1>
+  );
+}
+
 function SectionHeading({ eyebrow, title, description }: { eyebrow: string; title: string; description?: string }) {
-  return <div className="mb-12 grid gap-5 md:grid-cols-12 md:items-end"><p className="eyebrow md:col-span-3">{eyebrow}</p><div className="md:col-span-8"><h2 className="display max-w-3xl text-4xl leading-[.93] md:text-6xl">{title}</h2>{description && <p className="mt-5 max-w-xl text-sm leading-6 text-white/55">{description}</p>}</div></div>;
+  return <div data-reveal className="mb-12 grid gap-5 md:grid-cols-12 md:items-end"><p className="eyebrow md:col-span-3">{eyebrow}</p><div className="md:col-span-8"><h2 className="display max-w-3xl text-4xl leading-[.93] md:text-6xl">{title}</h2>{description && <p className="mt-5 max-w-xl text-sm leading-6 text-white/55">{description}</p>}</div></div>;
 }
 
 export default function Home() {
   const [locale, setLocale] = useState<"en" | "id">("en");
   const isIndonesian = locale === "id";
   useEffect(() => { document.documentElement.lang = locale; }, [locale]);
+  useEffect(() => {
+    const items = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      }),
+      { rootMargin: "0px 0px -8%", threshold: 0.08 },
+    );
+    items.forEach((item) => observer.observe(item));
+    return () => observer.disconnect();
+  }, []);
   const copy = isIndonesian ? {
     nav: { about: "Tentang", work: "Proyek", process: "Proses", contact: "Kontak", letsTalk: "Mari bicara", toggle: "Buka navigasi" },
     heroEyebrow: "Karya digital independen · Indonesia", heroIntro: "Saya membantu mengubah masalah digital menjadi website, sistem, otomasi, dan solusi teknis yang matang.", viewWork: "Lihat proyek", getInTouch: "Hubungi saya", solver: "Pemecah masalah digital", developer: "Developer berbantuan AI", heroPortraitAlt: "Potret Dipca Anugrah mengenakan jas hitam dengan detail wajah manusia dan AI", humanLabel: "Manusia", aiLabel: "Berbantuan AI",
@@ -67,19 +102,20 @@ export default function Home() {
 
       <section className="grid-bg relative min-h-[calc(100svh-65px)] border-b border-white/10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_28%,rgba(215,255,117,.13),transparent_24%),radial-gradient(circle_at_13%_82%,rgba(139,212,255,.1),transparent_25%)]" />
+        <div className="hero-orbit absolute right-[7%] top-[18%] hidden h-44 w-44 rounded-full border border-[#d7ff75]/20 lg:block" aria-hidden="true" />
         <div className="relative mx-auto flex min-h-[calc(100svh-65px)] max-w-[1280px] flex-col justify-between px-6 py-8 md:px-12 md:py-12">
           <p className="reveal eyebrow">{copy.heroEyebrow}</p>
           <div className="relative py-16 md:py-24">
             <div className="relative z-10 max-w-5xl lg:max-w-[70%]">
               <p className="reveal-delay mb-5 max-w-md text-sm leading-6 text-white/60">{copy.heroIntro}</p>
-              <h1 className="display reveal-delay text-[clamp(3.7rem,9.5vw,8.4rem)] leading-[.83]">Dipca<br /><span className="text-[#d7ff75]">Anugrah.</span></h1>
-              <div className="reveal-delay mt-10 flex flex-wrap items-center gap-3"><a href="#work" className="inline-flex items-center gap-2 rounded-full bg-[#d7ff75] px-5 py-3 text-sm font-bold transition hover:bg-white" style={{ color: "#000000" }}>{copy.viewWork} <ArrowUpRight className="h-4 w-4" /></a><a href="#contact" className="rounded-full border border-white/20 px-5 py-3 text-sm transition hover:border-white hover:bg-white/5">{copy.getInTouch}</a></div>
+              <HeroName />
+              <div className="reveal-delay mt-10 flex flex-wrap items-center gap-3"><a href="#work" className="button-primary inline-flex items-center gap-2 rounded-full bg-[#d7ff75] px-5 py-3 text-sm font-bold" style={{ color: "#000000" }}>{copy.viewWork} <ArrowUpRight className="button-arrow h-4 w-4" /></a><a href="#contact" className="button-secondary rounded-full border border-white/20 px-5 py-3 text-sm">{copy.getInTouch}</a></div>
             </div>
 
             <div className="reveal-delay relative -mx-6 -mt-4 h-[31rem] overflow-hidden sm:mx-0 lg:absolute lg:bottom-[-2.5rem] lg:right-[-1rem] lg:mt-0 lg:h-[min(82vh,51rem)] lg:w-[min(48vw,37rem)] lg:overflow-visible" aria-label={copy.heroPortraitAlt} role="img">
               <div className="absolute inset-x-[12%] bottom-[7%] top-[15%] border border-white/10 bg-[#10110f]/30" />
               <div className="absolute right-[4%] top-[23%] h-px w-[42%] bg-[#d7ff75]/70" />
-              <div className="absolute right-[4%] top-[23%] h-2 w-2 -translate-y-1/2 rounded-full bg-[#d7ff75]" />
+              <div className="hero-beacon absolute right-[4%] top-[23%] h-2 w-2 -translate-y-1/2 rounded-full bg-[#d7ff75]" />
               <div className="absolute bottom-[16%] left-[7%] h-px w-[33%] bg-[#8bd4ff]/50" />
               <Image
                 src="/profile/dipca-anugrah-ai-hero-fixed.webp"
@@ -100,15 +136,15 @@ export default function Home() {
 
       <section id="about" className="section-shell">
         <div className="grid gap-10 lg:grid-cols-12 lg:items-start">
-          <p className="eyebrow lg:col-span-3">{copy.aboutEyebrow}</p>
-          <div className="lg:col-span-5">
+          <p data-reveal className="eyebrow lg:col-span-3">{copy.aboutEyebrow}</p>
+          <div data-reveal className="lg:col-span-5" style={{ "--reveal-delay": "80ms" } as CSSProperties}>
             <p className="display max-w-4xl text-4xl leading-[.98] md:text-5xl xl:text-6xl">{copy.aboutTitle} <em className="text-[#d7ff75]">{copy.aboutEmphasis}</em></p>
             <div className="mt-9 grid gap-5 text-sm leading-7 text-white/60 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <p>{copy.aboutOne}</p>
               <p>{copy.aboutTwo} <span className="text-white/35">{copy.aboutLater}</span></p>
             </div>
           </div>
-          <figure className="group relative overflow-hidden border border-white/10 bg-[#151714] lg:col-span-4">
+          <figure data-reveal="scale" className="group image-sheen relative overflow-hidden border border-white/10 bg-[#151714] lg:col-span-4" style={{ "--reveal-delay": "150ms" } as CSSProperties}>
             <div className="relative aspect-[4/5] overflow-hidden">
               <Image
                 src="/profile/dipca-anugrah-portrait.webp"
@@ -131,17 +167,17 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="services" className="border-y border-white/10 bg-[#151714]"><div className="section-shell"><SectionHeading eyebrow={copy.servicesEyebrow} title={copy.servicesTitle} description={copy.servicesDescription} /><div className="grid border-l border-t border-white/10 md:grid-cols-2">{displayedServices.map((service) => <article key={service.number} className="min-h-60 border-b border-r border-white/10 p-6 md:p-8"><div className="flex justify-between"><span className="text-xs text-white/35">{service.number}</span><span className="h-2 w-2 rounded-full bg-[#d7ff75]" /></div><h3 className="mt-12 text-2xl tracking-[-.04em]">{service.title}</h3><p className="mt-3 max-w-md text-sm leading-6 text-white/55">{service.description}</p><div className="mt-6 flex flex-wrap gap-2">{service.tags.map(tag => <span key={tag} className="text-[10px] uppercase tracking-[.1em] text-white/35">{tag}</span>)}</div></article>)}</div></div></section>
+      <section id="services" className="border-y border-white/10 bg-[#151714]"><div className="section-shell"><SectionHeading eyebrow={copy.servicesEyebrow} title={copy.servicesTitle} description={copy.servicesDescription} /><div className="grid border-l border-t border-white/10 md:grid-cols-2">{displayedServices.map((service, index) => <article data-reveal key={service.number} className="service-card min-h-60 border-b border-r border-white/10 p-6 md:p-8" style={{ "--reveal-delay": `${index * 70}ms` } as CSSProperties}><div className="flex justify-between"><span className="text-xs text-white/35">{service.number}</span><span className="service-dot h-2 w-2 rounded-full bg-[#d7ff75]" /></div><h3 className="mt-12 text-2xl tracking-[-.04em]">{service.title}</h3><p className="mt-3 max-w-md text-sm leading-6 text-white/55">{service.description}</p><div className="mt-6 flex flex-wrap gap-2">{service.tags.map(tag => <span key={tag} className="text-[10px] uppercase tracking-[.1em] text-white/35">{tag}</span>)}</div></article>)}</div></div></section>
 
       <section id="work" className="section-shell"><SectionHeading eyebrow={copy.workEyebrow} title={copy.workTitle} description={copy.workDescription} /><div className="grid gap-4 md:grid-cols-2">{displayedProjects.map((project, index) => <ProjectCard key={project.title + index} project={project} index={index} visualLabel={copy.visualLabel} />)}</div><p className="mt-5 text-xs text-white/35">{copy.workNote}</p></section>
 
-      <section id="process" className="border-y border-white/10 bg-[#d7ff75] text-[#10110f]"><div className="section-shell"><div className="grid gap-8 md:grid-cols-12"><p className="text-[.68rem] font-bold uppercase tracking-[.16em] md:col-span-3">{copy.processEyebrow}</p><div className="md:col-span-8"><h2 className="display max-w-4xl text-5xl leading-[.9] md:text-7xl">{copy.processTitle}</h2><p className="mt-7 max-w-2xl text-sm leading-7 text-black/65">{copy.processDescription}</p></div></div><ol className="mt-16 grid border-l border-t border-black/15 sm:grid-cols-2 lg:grid-cols-4">{(isIndonesian ? ["Kebutuhan", "Perencanaan", "Pengembangan", "Bantuan AI", "Pengujian", "Debugging", "Penyempurnaan", "Produk akhir"] : workflow).map((step, index) => <li key={step} className="flex min-h-28 flex-col justify-between border-b border-r border-black/15 p-4"><span className="text-xs text-black/45">0{index + 1}</span><span className="text-lg tracking-[-.03em]">{step}</span></li>)}</ol></div></section>
+      <section id="process" className="border-y border-white/10 bg-[#d7ff75] text-[#10110f]"><div className="section-shell"><div data-reveal className="grid gap-8 md:grid-cols-12"><p className="text-[.68rem] font-bold uppercase tracking-[.16em] md:col-span-3">{copy.processEyebrow}</p><div className="md:col-span-8"><h2 className="display max-w-4xl text-5xl leading-[.9] md:text-7xl">{copy.processTitle}</h2><p className="mt-7 max-w-2xl text-sm leading-7 text-black/65">{copy.processDescription}</p></div></div><ol className="process-grid mt-16 grid border-l border-t border-black/15 sm:grid-cols-2 lg:grid-cols-4">{(isIndonesian ? ["Kebutuhan", "Perencanaan", "Pengembangan", "Bantuan AI", "Pengujian", "Debugging", "Penyempurnaan", "Produk akhir"] : workflow).map((step, index) => <li data-reveal key={step} className="process-step flex min-h-28 flex-col justify-between border-b border-r border-black/15 p-4" style={{ "--reveal-delay": `${(index % 4) * 55}ms` } as CSSProperties}><span className="text-xs text-black/45">0{index + 1}</span><span className="text-lg tracking-[-.03em]">{step}</span></li>)}</ol></div></section>
 
-      <section id="stack" className="section-shell"><SectionHeading eyebrow={copy.stackEyebrow} title={copy.stackTitle} description={copy.stackDescription} /><div className="border-t border-white/10">{technologyGroups.map((group, index) => <div key={group.label} className="grid gap-5 border-b border-white/10 py-6 md:grid-cols-12 md:items-center"><span className="text-xs text-white/35 md:col-span-3">0{index + 1} / {isIndonesian ? ["Frontend", "Mobile", "Backend / Basis data", "AI / Otomasi", "Alat"][index] : group.label}</span><div className="flex flex-wrap gap-2 md:col-span-8">{group.items.map(item => <span key={item} className="border border-white/15 px-3 py-2 text-sm text-white/70">{item}</span>)}</div></div>)}</div></section>
+      <section id="stack" className="section-shell"><SectionHeading eyebrow={copy.stackEyebrow} title={copy.stackTitle} description={copy.stackDescription} /><div className="border-t border-white/10">{technologyGroups.map((group, index) => <div data-reveal key={group.label} className="stack-row grid gap-5 border-b border-white/10 py-6 md:grid-cols-12 md:items-center" style={{ "--reveal-delay": `${index * 45}ms` } as CSSProperties}><span className="text-xs text-white/35 md:col-span-3">0{index + 1} / {isIndonesian ? ["Frontend", "Mobile", "Backend / Basis data", "AI / Otomasi", "Alat"][index] : group.label}</span><div className="flex flex-wrap gap-2 md:col-span-8">{group.items.map(item => <span key={item} className="tech-chip border border-white/15 px-3 py-2 text-sm text-white/70">{item}</span>)}</div></div>)}</div></section>
 
-      <section id="other-work" className="border-y border-white/10 bg-[#151714]"><div className="section-shell"><SectionHeading eyebrow={copy.otherEyebrow} title={copy.otherTitle} description={copy.otherDescription} /><div className="grid gap-px bg-white/10 md:grid-cols-3">{copy.otherItems.map((item, index) => <div key={item} className="min-h-40 bg-[#151714] p-6"><span className="text-xs text-[#d7ff75]">0{index + 1}</span><p className="mt-12 text-lg tracking-[-.03em]">{item}</p><p className="mt-2 text-xs text-white/40">{copy.otherNote}</p></div>)}</div></div></section>
+      <section id="other-work" className="border-y border-white/10 bg-[#151714]"><div className="section-shell"><SectionHeading eyebrow={copy.otherEyebrow} title={copy.otherTitle} description={copy.otherDescription} /><div className="grid gap-px bg-white/10 md:grid-cols-3">{copy.otherItems.map((item, index) => <div data-reveal key={item} className="other-card min-h-40 bg-[#151714] p-6" style={{ "--reveal-delay": `${index * 80}ms` } as CSSProperties}><span className="text-xs text-[#d7ff75]">0{index + 1}</span><p className="mt-12 text-lg tracking-[-.03em]">{item}</p><p className="mt-2 text-xs text-white/40">{copy.otherNote}</p></div>)}</div></div></section>
 
-      <section id="contact" className="section-shell"><div className="grid gap-12 md:grid-cols-12"><div className="md:col-span-8"><p className="eyebrow">{copy.contactEyebrow}</p><h2 className="display mt-7 max-w-4xl text-5xl leading-[.88] md:text-8xl">{copy.contactTitle}</h2><p className="mt-7 max-w-md text-sm leading-7 text-white/55">{copy.contactDescription}</p></div><div className="self-end md:col-span-4"><div className="border-t border-white/10">{contactLinks.map(link => <a key={link.label} href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined} className="group flex items-center justify-between gap-4 border-b border-white/10 py-4"><span className="shrink-0 text-xs text-white/40">{link.label}</span><span className="flex min-w-0 items-center gap-2 text-right text-sm text-white/75"><span className="break-all">{link.value}</span><ArrowUpRight className="h-4 w-4 shrink-0 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></span></a>)}</div></div></div></section>
+      <section id="contact" className="section-shell"><div className="grid gap-12 md:grid-cols-12"><div data-reveal className="md:col-span-8"><p className="eyebrow">{copy.contactEyebrow}</p><h2 className="display mt-7 max-w-4xl text-5xl leading-[.88] md:text-8xl">{copy.contactTitle}</h2><p className="mt-7 max-w-md text-sm leading-7 text-white/55">{copy.contactDescription}</p></div><div data-reveal="right" className="self-end md:col-span-4" style={{ "--reveal-delay": "120ms" } as CSSProperties}><div className="border-t border-white/10">{contactLinks.map(link => <a key={link.label} href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined} className="contact-link group flex items-center justify-between gap-4 border-b border-white/10 py-4"><span className="shrink-0 text-xs text-white/40">{link.label}</span><span className="flex min-w-0 items-center gap-2 text-right text-sm text-white/75"><span className="break-all">{link.value}</span><ArrowUpRight className="h-4 w-4 shrink-0" /></span></a>)}</div></div></div></section>
 
       <footer className="border-t border-white/10 px-6 py-6 md:px-12"><div className="mx-auto flex max-w-[1280px] flex-col justify-between gap-2 text-[10px] uppercase tracking-[.12em] text-white/35 sm:flex-row"><span>© {new Date().getFullYear()} Dipca Anugrah</span><span>{copy.footer}</span></div></footer>
     </main>

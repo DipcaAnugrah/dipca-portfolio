@@ -1,10 +1,11 @@
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import type { Project } from "@/data/portfolio";
 import { ArrowUpRight } from "./icons";
 
 export function ProjectCard({ project, index, visualLabel }: { project: Project; index: number; visualLabel: string }) {
   const card = (
-    <article className="group flex flex-col border border-white/10 bg-white/[0.025] p-4 transition duration-300 hover:-translate-y-1 hover:border-white/25 md:p-5">
+    <article data-reveal="scale" style={{ "--reveal-delay": `${index * 80}ms` } as CSSProperties} className="project-card group flex flex-col border border-white/10 bg-white/[0.025] p-4 transition duration-300 hover:-translate-y-1 hover:border-white/25 md:p-5">
       <div className="relative mb-5 aspect-[16/10] overflow-hidden bg-[#1b1d19]">
         {project.image ? (
           <>
