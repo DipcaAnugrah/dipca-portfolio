@@ -4,12 +4,12 @@ import type { Project } from "@/data/portfolio";
 import { ArrowUpRight } from "./icons";
 
 export function ProjectCard({ project, index, visualLabel }: { project: Project; index: number; visualLabel: string }) {
-  const card = (
+  return (
     <article data-reveal="scale" style={{ "--reveal-delay": `${index * 80}ms` } as CSSProperties} className={`project-card project-card-${index + 1} group flex flex-col border border-white/10 bg-white/[0.025] p-4 transition duration-300 hover:-translate-y-1 hover:border-white/25 md:p-5`}>
       <div className="relative mb-5 aspect-[16/10] overflow-hidden bg-[#1b1d19]">
         {project.image ? (
           <>
-            <Image src={project.image} alt={project.imageAlt ?? project.title} fill sizes="(min-width: 768px) 50vw, 100vw" loading={project.imageLoading ?? "lazy"} unoptimized={project.imageUnoptimized} className={`object-cover transition duration-500 group-hover:scale-[1.03] ${project.imagePosition === "top" ? "object-top" : "object-center"}`} />
+            <Image src={project.image} alt={project.imageAlt ?? project.title} fill sizes="(min-width: 768px) 50vw, 100vw" loading={project.imageLoading ?? "lazy"} unoptimized={project.imageUnoptimized} className={`${project.imageFit === "contain" ? "object-contain" : "object-cover"} transition duration-500 group-hover:scale-[1.03] ${project.imagePosition === "top" ? "object-top" : "object-center"}`} />
             <div className="absolute inset-0 bg-gradient-to-t from-[#10110f]/75 via-transparent to-[#10110f]/20" />
           </>
         ) : (
@@ -21,9 +21,7 @@ export function ProjectCard({ project, index, visualLabel }: { project: Project;
       <div className="mb-3 flex items-center justify-between gap-4"><p className="text-[10px] font-bold uppercase tracking-[.13em] text-[#78aaff]">{project.category}</p><span className="text-xs text-white/35">0{index + 1}</span></div>
       <h3 className="project-title text-xl font-medium tracking-[-.035em]">{project.title}</h3>
       <p className="body-copy mt-2 max-w-sm text-sm leading-6 text-white/55">{project.description}</p>
-      <div className="mt-auto flex items-center justify-between gap-3 pt-6"><div className="flex flex-wrap gap-1.5">{project.technologies.map((tech, techIndex) => <span key={`${tech}-${techIndex}`} className="border border-white/10 px-2 py-1 text-[10px] text-white/45">{tech}</span>)}</div>{project.href ? <span className="rounded-full border border-white/15 p-2 text-white/45 transition group-hover:bg-[#ff78b7] group-hover:text-[#090b12]"><ArrowUpRight className="h-4 w-4" /></span> : <span className="text-[10px] uppercase tracking-[.1em] text-white/25">Portfolio</span>}</div>
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-6"><div className="flex flex-wrap gap-1.5">{project.technologies.map((tech, techIndex) => <span key={`${tech}-${techIndex}`} className="border border-white/10 px-2 py-1 text-[10px] text-white/45">{tech}</span>)}</div><div className="flex items-center gap-2">{project.github && <a href={project.github} target="_blank" rel="noopener noreferrer" aria-label={`Open ${project.title} on GitHub`} className="project-card-action">GitHub <ArrowUpRight className="h-3.5 w-3.5" /></a>}{project.href && <a href={project.href} target="_blank" rel="noopener noreferrer" aria-label={`Open ${project.title}`} className="project-card-action project-card-demo">Demo <ArrowUpRight className="h-3.5 w-3.5" /></a>}</div></div>
     </article>
   );
-
-  return project.href ? <a href={project.href} target="_blank" rel="noopener noreferrer" aria-label={`Open ${project.title}`}>{card}</a> : card;
 }

@@ -18,6 +18,7 @@ const eslintConfig = [
       "sistem-kasir/**",
       "Kasatset/**",
       "web legalkes/**",
+      "sertifikat/**",
       "next-env.d.ts",
     ],
   },
