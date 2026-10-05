@@ -51,7 +51,7 @@ export default function ProjectsPage() {
 
   return (
     <main id="top" className="min-h-screen overflow-x-clip">
-      <Navbar locale={locale} onLocaleChange={setLocale} labels={copy.nav} rootLinks />
+      <Navbar lang={locale} onLangChange={setLocale} rootLinks />
       <ThemeModeButton theme={theme} locale={locale} onThemeChange={setTheme} />
       <section className="section-shell project-catalog-shell pt-28 md:pt-36">
         <div data-reveal className="mb-14 grid gap-6 md:grid-cols-12 md:items-end">

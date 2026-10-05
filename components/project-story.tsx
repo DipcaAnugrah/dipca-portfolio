@@ -206,9 +206,12 @@ export function ProjectStory({ projects, moreProjects, visualLabel, locale }: Pr
         </div>
       </div>
 
-      <div className="project-story-mobile">
-        {projects.map((project, index) => <ProjectCard key={`${project.title}-mobile`} project={project} index={index} visualLabel={visualLabel} />)}
-        {moreProjects && <Link href="/projects" className="project-story-mobile-cta"><span>0{storyItemCount}</span><div><p>{moreProjects.category}</p><strong>{moreProjects.title}</strong><small>{moreProjects.actionLabel} <ArrowUpRight className="h-4 w-4" /></small></div></Link>}
+      <div className="project-story-mobile-shell">
+        <p className="project-story-mobile-hint">{locale === "id" ? "Geser ke samping untuk melihat proyek lainnya" : "Swipe sideways to explore more projects"}<span aria-hidden="true">→</span></p>
+        <div className="project-story-mobile" role="region" aria-label={locale === "id" ? "Koleksi proyek, geser ke samping" : "Project collection, swipe sideways"} tabIndex={0}>
+          {projects.map((project, index) => <ProjectCard key={`${project.title}-mobile`} project={project} index={index} visualLabel={visualLabel} />)}
+          {moreProjects && <Link href="/projects" className="project-story-mobile-cta"><span>0{storyItemCount}</span><div><p>{moreProjects.category}</p><strong>{moreProjects.title}</strong><small>{moreProjects.actionLabel} <ArrowUpRight className="h-4 w-4" /></small></div></Link>}
+        </div>
       </div>
     </>
   );

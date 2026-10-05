@@ -1,10 +1,10 @@
-type Locale = "en" | "id";
+import type { NavbarLanguage } from "./navbar";
 
-export function LanguageToggle({ locale, onChange }: { locale: Locale; onChange: (locale: Locale) => void }) {
+export function LanguageToggle({ lang, onLangChange }: { lang: NavbarLanguage; onLangChange: (lang: NavbarLanguage) => void }) {
   return (
-    <div className="language-toggle flex items-center rounded-full border border-white/15 p-0.5" aria-label="Language selector">
-      <button type="button" onClick={() => onChange("id")} aria-pressed={locale === "id"} className={`control-button rounded-full px-2.5 py-1 text-[10px] font-bold ${locale === "id" ? "bg-[#78aaff] text-[#090b12]" : "text-white/45 hover:text-white"}`}>ID</button>
-      <button type="button" onClick={() => onChange("en")} aria-pressed={locale === "en"} className={`control-button rounded-full px-2.5 py-1 text-[10px] font-bold ${locale === "en" ? "bg-[#78aaff] text-[#090b12]" : "text-white/45 hover:text-white"}`}>EN</button>
+    <div className="language-toggle" aria-label="Language selector">
+      <button type="button" onClick={() => onLangChange("id")} aria-pressed={lang === "id"} className={lang === "id" ? "is-active" : ""}>ID</button>
+      <button type="button" onClick={() => onLangChange("en")} aria-pressed={lang === "en"} className={lang === "en" ? "is-active" : ""}>EN</button>
     </div>
   );
 }

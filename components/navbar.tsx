@@ -1,67 +1,216 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Menu } from "./icons";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { ArrowUpRight } from "./icons";
 import { LanguageToggle } from "./language-toggle";
 
-type Locale = "en" | "id";
-const navigationTargets = ["#about", "#work", "#process", "#contact"];
+export type NavbarLanguage = "en" | "id";
 
-export function Navbar({ locale, onLocaleChange, labels, rootLinks = false }: { locale: Locale; onLocaleChange: (locale: Locale) => void; labels: { about: string; work: string; process: string; contact: string; letsTalk: string; toggle: string }; rootLinks?: boolean }) {
+type NavbarProps = {
+  lang: NavbarLanguage;
+  onLangChange: (lang: NavbarLanguage) => void;
+  rootLinks?: boolean;
+};
+
+type IndicatorStyle = { left: number; width: number; visible: boolean };
+
+const navigation = {
+  id: {
+    links: [
+      { id: "tentang", label: "Tentang" },
+      { id: "proyek", label: "Proyek" },
+      { id: "proses", label: "Proses" },
+      { id: "kontak", label: "Kontak" },
+    ],
+    cta: "Mari Bicara",
+    navigation: "Navigasi utama",
+    open: "Buka menu navigasi",
+    close: "Tutup menu navigasi",
+  },
+  en: {
+    links: [
+      { id: "tentang", label: "About" },
+      { id: "proyek", label: "Projects" },
+      { id: "proses", label: "Process" },
+      { id: "kontak", label: "Contact" },
+    ],
+    cta: "Let's Talk",
+    navigation: "Main navigation",
+    open: "Open navigation menu",
+    close: "Close navigation menu",
+  },
+} as const;
+
+export function Navbar({ lang, onLangChange, rootLinks = false }: NavbarProps) {
   const [open, setOpen] = useState(false);
+  const [compact, setCompact] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const links = [
-    { href: rootLinks ? "/#about" : "#about", label: labels.about },
-    { href: "/projects", label: labels.work },
-    { href: rootLinks ? "/#process" : "#process", label: labels.process },
-    { href: rootLinks ? "/#contact" : "#contact", label: labels.contact },
-  ];
+  const [indicator, setIndicator] = useState<IndicatorStyle>({ left: 0, width: 0, visible: false });
+  const lastScrollY = useRef(0);
+  const linksContainerRef = useRef<HTMLDivElement>(null);
+  const linkRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+  const copy = navigation[lang];
+
+  const hrefFor = (id: string) => rootLinks ? `/#${id}` : `#${id}`;
+  const contactHref = hrefFor("kontak");
 
   useEffect(() => {
-    const updateProgress = () => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastScrollY.current;
+
+      setCompact(currentY > 24);
+      if (!open && currentY > 160 && delta > 5) setHidden(true);
+      if (delta < -4 || currentY <= 160) setHidden(false);
+      lastScrollY.current = currentY;
+
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+      const progress = maxScroll > 0 ? currentY / maxScroll : 0;
       document.documentElement.style.setProperty("--scroll-progress", String(Math.min(1, Math.max(0, progress))));
     };
-    const sections = navigationTargets
-      .map((target) => document.querySelector<HTMLElement>(target))
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [open]);
+
+  useEffect(() => {
+    if (rootLinks) return;
+    const sections = copy.links
+      .map(({ id }) => document.getElementById(id))
       .filter((section): section is HTMLElement => section !== null);
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries
           .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) setActiveSection(`#${visible[0].target.id}`);
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActiveSection(visible[0].target.id);
       },
-      { rootMargin: "-28% 0px -62%", threshold: 0 },
+      { rootMargin: "-22% 0px -58%", threshold: [0, 0.08, 0.25, 0.5] },
     );
-
-    updateProgress();
-    window.addEventListener("scroll", updateProgress, { passive: true });
     sections.forEach((section) => observer.observe(section));
-    return () => {
-      window.removeEventListener("scroll", updateProgress);
-      observer.disconnect();
+    return () => observer.disconnect();
+  }, [copy.links, rootLinks]);
+
+  useEffect(() => {
+    const updateIndicator = () => {
+      const index = copy.links.findIndex(({ id }) => id === activeSection);
+      const container = linksContainerRef.current;
+      const link = index >= 0 ? linkRefs.current[index] : null;
+      if (!container || !link) {
+        setIndicator((current) => ({ ...current, visible: false }));
+        return;
+      }
+      setIndicator({ left: link.offsetLeft, width: link.offsetWidth, visible: true });
     };
-  }, []);
+
+    const frame = window.requestAnimationFrame(updateIndicator);
+    window.addEventListener("resize", updateIndicator);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateIndicator);
+    };
+  }, [activeSection, compact, copy.links, lang]);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    if (open) {
+      document.body.style.overflow = "hidden";
+      setHidden(false);
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    const handleResize = () => {
+      if (window.innerWidth >= 860) setOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [open]);
+
+  const closeMobileMenu = (id: string) => {
+    setActiveSection(id);
+    setOpen(false);
+  };
 
   return (
-    <header className="site-navbar sticky top-0 z-50 border-b border-white/10 bg-[#10110f]/90 backdrop-blur-md">
-      <div className="scroll-progress" aria-hidden="true" />
-      <nav className="mx-auto flex max-w-[1280px] items-center justify-between px-6 py-4 md:px-12" aria-label="Main navigation">
-        <a href={rootLinks ? "/" : "#top"} className="brand-lockup" aria-label="Dipca Anugrah, top of page"><span className="brand-monogram">DA<span>.</span></span><span className="brand-caption">Digital<br />workshop</span></a>
-        <div className="hidden items-center gap-5 md:flex">
-          {links.map((link) => <a key={link.href} href={link.href} onClick={() => setActiveSection(link.href)} className={`nav-link text-xs text-white/60 ${activeSection === link.href ? "is-active" : ""}`}>{link.label}</a>)}
-          <LanguageToggle locale={locale} onChange={onLocaleChange} />
-          <a href="#contact" className="nav-cta button-primary rounded-full bg-[#78aaff] px-4 py-2 text-xs font-bold" style={{ color: "#ffffff" }}>{labels.letsTalk}</a>
+    <header className={`site-navbar ${compact ? "is-compact" : "is-at-top"} ${hidden ? "is-hidden" : ""} ${open ? "is-menu-open" : ""}`}>
+      <nav className="site-navbar-shell" aria-label={copy.navigation}>
+        <div className="scroll-progress" aria-hidden="true" />
+        <a href={rootLinks ? "/" : "#top"} className="brand-lockup" aria-label="Dipca Anugrah, top of page">
+          <span className="brand-monogram">DA<span>.</span></span>
+          <span className="brand-caption">Digital<br />Workshop</span>
+        </a>
+
+        <div className="navbar-desktop">
+          <div ref={linksContainerRef} className="navbar-links">
+            {copy.links.map((link, index) => (
+              <a
+                key={link.id}
+                ref={(node) => { linkRefs.current[index] = node; }}
+                href={hrefFor(link.id)}
+                onClick={() => setActiveSection(link.id)}
+                className={`navbar-link ${activeSection === link.id ? "is-active" : ""}`}
+                aria-current={activeSection === link.id ? "location" : undefined}
+              >
+                {link.label}
+              </a>
+            ))}
+            <span
+              className="navbar-active-indicator"
+              style={{ width: indicator.width, transform: `translate3d(${indicator.left}px,0,0)`, opacity: indicator.visible ? 1 : 0 }}
+              aria-hidden="true"
+            />
+          </div>
+          <LanguageToggle lang={lang} onLangChange={onLangChange} />
+          <a href={contactHref} className="navbar-cta">
+            <ArrowUpRight className="navbar-cta-arrow" />
+            <span>{copy.cta}</span>
+          </a>
         </div>
-        <div className="flex items-center gap-2 md:hidden"><LanguageToggle locale={locale} onChange={onLocaleChange} /><button type="button" onClick={() => setOpen(!open)} aria-label={labels.toggle} aria-expanded={open} className="icon-button"><Menu className="h-5 w-5" /></button></div>
+
+        <button
+          type="button"
+          className={`navbar-hamburger ${open ? "is-open" : ""}`}
+          onClick={() => setOpen((current) => !current)}
+          aria-label={open ? copy.close : copy.open}
+          aria-expanded={open}
+          aria-controls="mobile-navigation"
+        >
+          <span /><span />
+        </button>
       </nav>
-      {open && <div className="border-t border-white/10 px-6 pb-5 md:hidden">
-        <div className="flex flex-col gap-4 pt-5">
-          {links.map((link) => <a key={link.href} href={link.href} onClick={() => { setActiveSection(link.href); setOpen(false); }} className={`nav-link w-fit text-sm text-white/70 ${activeSection === link.href ? "is-active" : ""}`}>{link.label}</a>)}
+
+      <div id="mobile-navigation" className={`navbar-overlay ${open ? "is-open" : ""}`} aria-hidden={!open} inert={!open}>
+        <div className="navbar-overlay-links">
+          {copy.links.map((link, index) => (
+            <a
+              key={link.id}
+              href={hrefFor(link.id)}
+              className="navbar-overlay-link"
+              style={{ "--nav-item-index": index } as CSSProperties}
+              onClick={() => closeMobileMenu(link.id)}
+              aria-current={activeSection === link.id ? "location" : undefined}
+              tabIndex={open ? 0 : -1}
+            >
+              <span>0{index + 1}</span>{link.label}
+            </a>
+          ))}
         </div>
-      </div>}
+        <div className="navbar-overlay-footer">
+          <LanguageToggle lang={lang} onLangChange={onLangChange} />
+          <a href={contactHref} className="navbar-cta" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1}>
+            <ArrowUpRight className="navbar-cta-arrow" />
+            <span>{copy.cta}</span>
+          </a>
+        </div>
+      </div>
     </header>
   );
 }
