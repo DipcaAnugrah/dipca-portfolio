@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { Navbar } from "@/components/navbar";
 import { ArrowUpRight } from "@/components/icons";
 import { ProjectStory } from "@/components/project-story";
 import { ThemeModeButton } from "@/components/theme-mode-button";
 import { indonesianProjects, projects, services, technologyGroups } from "@/data/portfolio";
+import { usePortfolioPreferences, useReveal } from "@/lib/use-portfolio-preferences";
 
 const workflow = ["Requirements", "Planning", "Development", "AI assistance", "Testing", "Debugging", "Refinement", "Final product"];
 
@@ -29,35 +30,9 @@ function SectionHeading({ eyebrow, title, description }: { eyebrow: string; titl
 }
 
 export default function Home() {
-  const [locale, setLocale] = useState<"en" | "id">("id");
-  const [theme, setTheme] = useState<"normal" | "color">("normal");
-  const themeInitialized = useRef(false);
+  const { locale, setLocale, theme, setTheme } = usePortfolioPreferences();
   const isIndonesian = locale === "id";
-  useEffect(() => { document.documentElement.lang = locale; }, [locale]);
-  useEffect(() => {
-    if (!themeInitialized.current) {
-      themeInitialized.current = true;
-      const savedTheme = window.localStorage.getItem("portfolio-theme");
-      if (savedTheme === "normal" || savedTheme === "color") setTheme(savedTheme);
-      return;
-    }
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("portfolio-theme", theme);
-  }, [theme]);
-  useEffect(() => {
-    const items = document.querySelectorAll<HTMLElement>("[data-reveal]");
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        }
-      }),
-      { rootMargin: "0px 0px -8%", threshold: 0.08 },
-    );
-    items.forEach((item) => observer.observe(item));
-    return () => observer.disconnect();
-  }, []);
+  useReveal(locale);
   const copy = isIndonesian ? {
     nav: { about: "Tentang", work: "Proyek", process: "Proses", contact: "Kontak", letsTalk: "Mari bicara", toggle: "Buka navigasi" },
     heroPortraitAlt: "Potret Dipca Anugrah mengenakan jas hitam dengan detail wajah manusia dan AI", portraitNote: "Ya, itu saya — dengan sedikit sentuhan AI.", marquee: ["Website", "Sistem", "Otomasi", "AI-assisted", "Eksperimen teknis"],
@@ -143,7 +118,6 @@ export default function Home() {
                 src="/profile/dipca-anugrah-portrait.webp"
                 alt={copy.portraitAlt}
                 fill
-                priority
                 sizes="(max-width: 1023px) 100vw, 34vw"
                 className="object-cover saturate-[.86] transition duration-700 ease-out group-hover:scale-[1.015] group-hover:saturate-100"
                 style={{ objectPosition: "50% 58%" }}
@@ -164,11 +138,11 @@ export default function Home() {
 
       <section id="proyek" className="section-shell work-section"><SectionHeading eyebrow={copy.workEyebrow} title={copy.workTitle} description={copy.workDescription} /><ProjectStory projects={featuredProjects} moreProjects={copy.moreProjects} visualLabel={copy.visualLabel} locale={locale} /><p className="body-copy work-note mt-5 text-xs text-white/35">{copy.workNote}</p></section>
 
-      <section id="proses" className="process-section border-y border-white/10 text-white"><div className="section-shell"><div data-reveal className="grid gap-8 md:grid-cols-12"><p className="text-[.68rem] font-bold uppercase tracking-[.16em] text-[#ff78b7] md:col-span-3">{copy.processEyebrow}</p><div className="md:col-span-8"><h2 className="display max-w-4xl text-5xl leading-[.9] md:text-7xl">{copy.processTitle}</h2><p className="body-copy mt-7 max-w-2xl text-sm leading-7 text-white/60">{copy.processDescription}</p></div></div><ol className="process-grid mt-16 grid border-l border-t border-white/15 sm:grid-cols-2 lg:grid-cols-4">{(isIndonesian ? ["Kebutuhan", "Perencanaan", "Pengembangan", "Bantuan AI", "Pengujian", "Debugging", "Penyempurnaan", "Produk akhir"] : workflow).map((step, index) => <li data-reveal key={step} className="process-step flex min-h-28 flex-col justify-between border-b border-r border-white/15 p-4" style={{ "--reveal-delay": `${(index % 4) * 55}ms` } as CSSProperties}><span className="text-xs text-white/40">0{index + 1}</span><span className="text-lg tracking-[-.03em]">{step}</span></li>)}</ol></div></section>
+      <section id="proses" className="process-section border-y border-white/10 text-white"><div className="section-shell"><div data-reveal className="grid gap-8 md:grid-cols-12"><p className="text-[.68rem] font-bold uppercase tracking-[.16em] text-[#ff78b7] md:col-span-3">{copy.processEyebrow}</p><div className="md:col-span-8"><h2 className="display max-w-4xl text-5xl leading-[.9] md:text-7xl">{copy.processTitle}</h2><p className="body-copy mt-7 max-w-2xl text-sm leading-7 text-white/60">{copy.processDescription}</p></div></div><ol className="process-grid mt-16 grid border-l border-t border-white/15 sm:grid-cols-2 lg:grid-cols-4">{(isIndonesian ? ["Kebutuhan", "Perencanaan", "Pengembangan", "Bantuan AI", "Pengujian", "Debugging", "Penyempurnaan", "Produk akhir"] : workflow).map((step, index) => <li data-reveal key={index} className="process-step flex min-h-28 flex-col justify-between border-b border-r border-white/15 p-4" style={{ "--reveal-delay": `${(index % 4) * 55}ms` } as CSSProperties}><span className="text-xs text-white/40">0{index + 1}</span><span className="text-lg tracking-[-.03em]">{step}</span></li>)}</ol></div></section>
 
       <section id="stack" className="section-shell"><SectionHeading eyebrow={copy.stackEyebrow} title={copy.stackTitle} description={copy.stackDescription} /><div className="border-t border-white/10">{technologyGroups.map((group, index) => <div data-reveal key={group.label} className="stack-row grid gap-5 border-b border-white/10 py-6 md:grid-cols-12 md:items-center" style={{ "--reveal-delay": `${index * 45}ms` } as CSSProperties}><span className="text-xs text-white/35 md:col-span-3">0{index + 1} / {isIndonesian ? ["Frontend", "Mobile", "Backend / Basis data", "AI / Otomasi", "Alat"][index] : group.label}</span><div className="flex flex-wrap gap-2 md:col-span-8">{group.items.map(item => <span key={item} className="tech-chip border border-white/15 px-3 py-2 text-sm text-white/70">{item}</span>)}</div></div>)}</div></section>
 
-      <section id="other-work" className="other-work-section border-y border-white/10 bg-[#11131c]"><div className="section-shell"><SectionHeading eyebrow={copy.otherEyebrow} title={copy.otherTitle} description={copy.otherDescription} /><div className="grid gap-px bg-white/10 md:grid-cols-3">{copy.otherItems.map((item, index) => <div data-reveal key={item} className="other-card min-h-40 bg-[#11131c] p-6" style={{ "--reveal-delay": `${index * 80}ms` } as CSSProperties}><span className="text-xs text-[#ff78b7]">0{index + 1}</span><p className="mt-12 text-lg tracking-[-.03em]">{item}</p><p className="body-copy mt-2 text-xs text-white/40">{copy.otherNote}</p></div>)}</div></div></section>
+      <section id="other-work" className="other-work-section border-y border-white/10 bg-[#11131c]"><div className="section-shell"><SectionHeading eyebrow={copy.otherEyebrow} title={copy.otherTitle} description={copy.otherDescription} /><div className="grid gap-px bg-white/10 md:grid-cols-3">{copy.otherItems.map((item, index) => <div data-reveal key={index} className="other-card min-h-40 bg-[#11131c] p-6" style={{ "--reveal-delay": `${index * 80}ms` } as CSSProperties}><span className="text-xs text-[#ff78b7]">0{index + 1}</span><p className="mt-12 text-lg tracking-[-.03em]">{item}</p><p className="body-copy mt-2 text-xs text-white/40">{copy.otherNote}</p></div>)}</div></div></section>
 
       <section id="kontak" className="section-shell"><div className="grid gap-12 md:grid-cols-12"><div data-reveal className="md:col-span-8"><p className="eyebrow">{copy.contactEyebrow}</p><h2 className="display mt-7 max-w-4xl text-5xl leading-[.88] md:text-8xl">{copy.contactTitle}</h2><p className="body-copy mt-7 max-w-md text-sm leading-7 text-white/55">{copy.contactDescription}</p></div><div data-reveal="right" className="self-end md:col-span-4" style={{ "--reveal-delay": "120ms" } as CSSProperties}><div className="border-t border-white/10">{contactLinks.map(link => <a key={link.label} href={link.href} target={link.href.startsWith("http") ? "_blank" : undefined} rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined} className="contact-link group flex items-center justify-between gap-4 border-b border-white/10 py-4"><span className="shrink-0 text-xs text-white/40">{link.label}</span><span className="flex min-w-0 items-center gap-2 text-right text-sm text-white/75"><span className="break-all">{link.value}</span><ArrowUpRight className="h-4 w-4 shrink-0" /></span></a>)}</div></div></div></section>
 

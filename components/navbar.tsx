@@ -56,7 +56,9 @@ export function Navbar({ lang, onLangChange, rootLinks = false }: NavbarProps) {
   const contactHref = hrefFor("kontak");
 
   useEffect(() => {
-    const handleScroll = () => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
       const currentY = window.scrollY;
       const delta = currentY - lastScrollY.current;
 
@@ -70,9 +72,17 @@ export function Navbar({ lang, onLangChange, rootLinks = false }: NavbarProps) {
       document.documentElement.style.setProperty("--scroll-progress", String(Math.min(1, Math.max(0, progress))));
     };
 
-    handleScroll();
+    // Coalesce scroll events into one update per frame to keep scrolling smooth.
+    const handleScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+
+    update();
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, [open]);
 
   useEffect(() => {

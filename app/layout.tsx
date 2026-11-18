@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
+import { preferencesBootScript } from "@/lib/use-portfolio-preferences";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -16,7 +17,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    // The boot script sets lang/data-theme before hydration, so the attributes can differ from the server HTML.
+    <html lang="id" data-theme="normal" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: preferencesBootScript }} />
+      </head>
       <body className={manrope.variable} suppressHydrationWarning>{children}</body>
     </html>
   );

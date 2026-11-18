@@ -22,7 +22,6 @@ type ProjectStoryProps = {
 };
 
 export function ProjectStory({ projects, moreProjects, visualLabel, locale }: ProjectStoryProps) {
-  const stageRef = useRef<HTMLDivElement>(null);
   const visualRef = useRef<HTMLDivElement>(null);
   const wheelTimerRef = useRef<number | null>(null);
   const activeIndexRef = useRef(0);
@@ -47,13 +46,14 @@ export function ProjectStory({ projects, moreProjects, visualLabel, locale }: Pr
       const activeImage = visual.querySelector<HTMLElement>(".project-story-figure[data-state='active'] .project-story-image, .project-story-figure[data-state='active'] .project-story-more-visual");
       if (!activeImage?.contains(event.target as Node)) return;
 
-      // Only the actual project image is its own navigator, never the full visual panel.
-      event.preventDefault();
-      if (wheelTimerRef.current !== null) return;
-
       const direction = event.deltaY > 0 ? 1 : -1;
       const nextIndex = Math.min(storyItemCount - 1, Math.max(0, activeIndexRef.current + direction));
-      if (nextIndex === activeIndexRef.current) return;
+      // At the first/last project, let the page keep scrolling instead of trapping the wheel.
+      if (nextIndex === activeIndexRef.current && wheelTimerRef.current === null) return;
+
+      // Only the actual project image is its own navigator, never the full visual panel.
+      event.preventDefault();
+      if (wheelTimerRef.current !== null || nextIndex === activeIndexRef.current) return;
 
       activeIndexRef.current = nextIndex;
       setActiveIndex(nextIndex);
@@ -63,24 +63,6 @@ export function ProjectStory({ projects, moreProjects, visualLabel, locale }: Pr
     visual.addEventListener("wheel", handleVisualWheel, { passive: false });
     return () => visual.removeEventListener("wheel", handleVisualWheel);
   }, [storyItemCount]);
-
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-
-    const forwardPageScroll = (event: WheelEvent) => {
-      if (!window.matchMedia("(min-width: 768px)").matches) return;
-      const activeImage = visualRef.current?.querySelector<HTMLElement>(".project-story-figure[data-state='active'] .project-story-image, .project-story-figure[data-state='active'] .project-story-more-visual");
-      if (activeImage?.contains(event.target as Node)) return;
-
-      // Everything except the image itself retains normal page scrolling.
-      event.preventDefault();
-      window.scrollBy({ top: event.deltaY, left: event.deltaX, behavior: "auto" });
-    };
-
-    stage.addEventListener("wheel", forwardPageScroll, { passive: false });
-    return () => stage.removeEventListener("wheel", forwardPageScroll);
-  }, []);
 
   const palette = projectPalettes[activeIndex % projectPalettes.length];
   const storyStyle = {
@@ -93,13 +75,13 @@ export function ProjectStory({ projects, moreProjects, visualLabel, locale }: Pr
   return (
     <>
       <div className="project-story" style={storyStyle}>
-        <div ref={stageRef} className="project-story-stage">
+        <div className="project-story-stage">
           <div className="project-story-list" aria-label={locale === "id" ? "Daftar proyek" : "Project list"}>
             {projects.map((project, index) => {
               const isActive = index === activeIndex;
               return (
                 <article
-                  key={`${project.title}-${index}`}
+                  key={index}
                   className="project-story-point"
                   data-active={isActive}
                 >
@@ -176,7 +158,7 @@ export function ProjectStory({ projects, moreProjects, visualLabel, locale }: Pr
 
               return project.href ? (
                 <a
-                  key={`${project.title}-visual`}
+                  key={`visual-${index}`}
                   href={project.href}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -188,7 +170,7 @@ export function ProjectStory({ projects, moreProjects, visualLabel, locale }: Pr
                 >
                   {visual}
                 </a>
-              ) : <div key={`${project.title}-visual`} className="project-story-visual-link" data-active={isActive}>{visual}</div>;
+              ) : <div key={`visual-${index}`} className="project-story-visual-link" data-active={isActive}>{visual}</div>;
             })}
             {moreProjects && (() => {
               const index = projects.length;
@@ -209,7 +191,7 @@ export function ProjectStory({ projects, moreProjects, visualLabel, locale }: Pr
       <div className="project-story-mobile-shell">
         <p className="project-story-mobile-hint">{locale === "id" ? "Geser ke samping untuk melihat proyek lainnya" : "Swipe sideways to explore more projects"}<span aria-hidden="true">→</span></p>
         <div className="project-story-mobile" role="region" aria-label={locale === "id" ? "Koleksi proyek, geser ke samping" : "Project collection, swipe sideways"} tabIndex={0}>
-          {projects.map((project, index) => <ProjectCard key={`${project.title}-mobile`} project={project} index={index} visualLabel={visualLabel} />)}
+          {projects.map((project, index) => <ProjectCard key={`mobile-${index}`} project={project} index={index} visualLabel={visualLabel} />)}
           {moreProjects && <Link href="/projects" className="project-story-mobile-cta"><span>0{storyItemCount}</span><div><p>{moreProjects.category}</p><strong>{moreProjects.title}</strong><small>{moreProjects.actionLabel} <ArrowUpRight className="h-4 w-4" /></small></div></Link>}
         </div>
       </div>

@@ -1,18 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "@/components/icons";
 import { Navbar } from "@/components/navbar";
 import { ProjectCard } from "@/components/project-card";
 import { ThemeModeButton } from "@/components/theme-mode-button";
 import { indonesianProjects, projects } from "@/data/portfolio";
+import { usePortfolioPreferences, useReveal } from "@/lib/use-portfolio-preferences";
 
 export default function ProjectsPage() {
-  const [locale, setLocale] = useState<"en" | "id">("id");
-  const [theme, setTheme] = useState<"normal" | "color">("normal");
-  const themeInitialized = useRef(false);
+  const { locale, setLocale, theme, setTheme } = usePortfolioPreferences();
   const isIndonesian = locale === "id";
+  useReveal(locale);
   const copy = isIndonesian ? {
     nav: { about: "Tentang", work: "Proyek", process: "Proses", contact: "Kontak", letsTalk: "Mari bicara", toggle: "Buka navigasi" },
     eyebrow: "Koleksi lengkap · Proyek", title: "Karya yang saya bangun untuk memecahkan masalah.", description: "Kumpulan website, aplikasi, sistem, proyek teknis, dan eksperimen digital. Detail setiap proyek akan terus dilengkapi seiring perkembangannya.", back: "Kembali ke beranda", visualLabel: "Visual proyek",
@@ -21,31 +20,6 @@ export default function ProjectsPage() {
     eyebrow: "Complete collection · Projects", title: "Work I build to solve real problems.", description: "A collection of websites, applications, systems, technical projects, and digital experiments. More context will be added to each project over time.", back: "Back to home", visualLabel: "Project visual",
   };
 
-  useEffect(() => { document.documentElement.lang = locale; }, [locale]);
-  useEffect(() => {
-    if (!themeInitialized.current) {
-      themeInitialized.current = true;
-      const savedTheme = window.localStorage.getItem("portfolio-theme");
-      if (savedTheme === "normal" || savedTheme === "color") setTheme(savedTheme);
-      return;
-    }
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem("portfolio-theme", theme);
-  }, [theme]);
-  useEffect(() => {
-    const items = document.querySelectorAll<HTMLElement>("[data-reveal]");
-    const observer = new IntersectionObserver(
-      (entries) => entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        }
-      }),
-      { rootMargin: "0px 0px -8%", threshold: 0.08 },
-    );
-    items.forEach((item) => observer.observe(item));
-    return () => observer.disconnect();
-  }, []);
 
   const displayedProjects = isIndonesian ? indonesianProjects : projects;
 
@@ -65,7 +39,7 @@ export default function ProjectsPage() {
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {displayedProjects.map((project, index) => <ProjectCard key={`${project.title}-${index}`} project={project} index={index} visualLabel={copy.visualLabel} />)}
+          {displayedProjects.map((project, index) => <ProjectCard key={index} project={project} index={index} visualLabel={copy.visualLabel} />)}
         </div>
       </section>
     </main>
